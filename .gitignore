@@ -1,0 +1,14 @@
+# 註解，會被忽略。
+# 不要追蹤檔名為 .pyc 結尾的檔案
+*.pyc
+db.sqlite3
+# 但是要追蹤 lib.pyc，即使上方已指定忽略所有的 .pyc 檔案
+#!lib.pyc
+# 只忽略根目錄下的 TODO 檔案。 不包含子目錄下的 TODO
+#/TODO
+# 忽略build/目錄下所有檔案
+Django_test/_pycache_
+# 忽略doc/notes.txt但不包含doc/server/arch.txt
+#doc/*.txt
+# ignore all .txt files in the doc/ directory
+#doc/**/*.txt
