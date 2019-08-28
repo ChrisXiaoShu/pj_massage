@@ -17,8 +17,10 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
 from test_app.views import sayhello
+from test_app.views import get_image_test
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^$', sayhello)
+    url(r'^$', sayhello),
+    url(r'get_image/(?P<ID>c[0-9]{2})$', get_image_test, name='get_image'),
 ]
