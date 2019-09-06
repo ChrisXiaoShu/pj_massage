@@ -1,33 +1,33 @@
 from django.contrib import admin
-from test_app.models import Customer, Reservation, MassagerGroup, Massager
+from test_app.models import Customer, Reservation, MasterGroup, Master
 
 # Register your models here.
 class CustomerAdmin(admin.ModelAdmin):
-    list_display=('id', 'line_id', 'c_name', 'c_phone','is_black')
+    list_display=('line_id', 'name', 'phone','is_black')
     list_filter=('is_black',)
-    search_fields=('c_name','c_phone')
-    ordering=('id',)
+    search_fields=('name','phone')
+    ordering=('line_id',)
 
 
 class ReservationAdmin(admin.ModelAdmin):
-    list_display=('id', 'customer', 'date', 'c_name', 'c_phone')
-    list_filter=('date',)
-    search_fields=('customer','c_name')
-    ordering=('date',)
+    list_display=('id', 'customer', 'datetime', 'name', 'phone', 'has_remind')
+    list_filter=('datetime',)
+    search_fields=('customer','name')
+    ordering=('datetime',)
 
 
-class MassagerGroupAdmin(admin.ModelAdmin):
-    list_display=('id', 'g_name')
-    ordering=('g_name',)
+class MasterGroupAdmin(admin.ModelAdmin):
+    list_display=('id', 'name')
+    ordering=('name',)
 
-class MassagerAdmin(admin.ModelAdmin):
-    list_display=('id', 'm_name', 'massagergroup')
-    list_filter=('massagergroup',)
-    search_fields=('m_name','massagergroup')
-    ordering=('massagergroup',)
+class MasterAdmin(admin.ModelAdmin):
+    list_display=('master_id', 'group', 'name', 'work_type')
+    list_filter=('group',)
+    search_fields=('master_id','name')
+    ordering=('group',)
 
 
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Reservation, ReservationAdmin)
-admin.site.register(MassagerGroup, MassagerGroupAdmin)
-admin.site.register(Massager, MassagerAdmin)
+admin.site.register(MasterGroup, MasterGroupAdmin)
+admin.site.register(Master, MasterAdmin)

@@ -1,48 +1,43 @@
 from django.db import models
+from datetime import datetime
 
 class Customer(models.Model):
-    line_id = models.CharField(max_length=30, null=False)
-    c_name = models.CharField(max_length=10, null=False)
-    c_phone = models.CharField(max_length=10, null=False)
+    line_id = models.CharField(max_length=30, primary_key=True)
+    name = models.CharField(max_length=10)
+    phone = models.CharField(max_length=10)
     is_black = models.BooleanField(default=False)
 
     def __str__(self):
-        return "{}_{}".format(self.c_name, self.c_phone)
+        return "{}_{}".format(self.name, self.phone)
+
+
+class MasterGroup(models.Model):
+    name = models.CharField(max_length=10)
+
+    def __str__(self):
+        return "{}{}".format('group ', self.name)
+
+
+class Master(models.Model):
+    master_id = models.CharField(max_length=10, primary_key=True)
+    group = models.ForeignKey(MasterGroup, on_delete=models.CASCADE)
+    name = models.CharField(max_length=10)
+    work_type = models.IntegerField(
+        choices=[(1, '單'), (2, '雙')],
+        default=1,
+    )
+
+    def __str__(self):
+        return "{}_{}".format(self.group, self.name)
 
 
 class Reservation(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    date = models.DateTimeField()
-    c_name = models.CharField(max_length=10, null=False)
-    c_phone = models.CharField(max_length=10, null=False)
-
-@classmethod
-def make_reservation(reservation, massager, date, customer, c_name, c_phone):
-    status = False
-    # with transaction.atomic():
-    #     q_reservation = (
-    #        reservation.objects
-    #        .select_for_update()
-    #        .get(customer = customer, massager = massager, date = date)
-    #     )
-
-    #     if not q_reservation:
-    #         reservation.objects.create()
-    #         status = True
-    obj, created = Person.objects.get_or_create(
-    first_name='John',
-    last_name='Lennon',
-    defaults={'birthday': date(1940, 10, 9)},
-)   
-          
-    return status
-
-class MassagerGroup(models.Model):
-    g_name = models.CharField(max_length=10, null=False)
+    master = models.ForeignKey(Master, on_delete=models.CASCADE, unique_for_date = 'datetime')
+    datetime = models.DateTimeField(verbose_name="reservation_time")
+    name = models.CharField(max_length=10)
+    phone = models.CharField(max_length=10)
+    has_remind = models.BooleanField(default=False)
 
     def __str__(self):
-        return "{}{}".format('massage group ', self.g_name)
-
-class Massager(models.Model):
-    massagergroup = models.ForeignKey(MassagerGroup, on_delete=models.CASCADE)
-    m_name = models.CharField(max_length=10, null=False)
+        return "{}_{}_{}_{}".format(self.id, self.master, datetime.strftime(self.datetime, '%Y%m%d%H%M'), self.name)

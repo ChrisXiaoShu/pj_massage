@@ -1,12 +1,161 @@
+from datetime import datetime, timedelta, timezone
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime, timedelta, timezone
+import pytz
+from test_app.models import Customer, Reservation, Master, MasterGroup
+from test_app.google_calendar import CalendarManager
 
-def sayhello(request):
-    return HttpResponse('Hello Django')
-
-def get_image_test(request, ID):
-    return HttpResponseNotFound( ID + "ChrisNotFound")
-    
 
 # Create your views here.
+
+@csrf_exempt #to disable the CSRF restrict
+def post_reservation(request):
+    if request.method =="POST" :
+        status = "POST"
+    
+    master_id = request.POST.get('master_id', 'default_mid')
+    dt_str = request.POST.get('dt', 'default_time')
+    line_id = request.POST.get('lineid', 'default_lineid')
+    name = request.POST.get('name', 'default_name')
+    phone = request.POST.get('phone', 'default_phonw')
+
+    m = Master.objects.get(master_id=master_id)
+    c = Customer.objects.get(line_id=line_id)
+    dt = datetime.strptime(dt_str, '%Y%m%d%H%M')
+
+    dt.replace(tzinfo=pytz.timezone('Asia/Taipei'))
+    obj, created = Reservation.objects.get_or_create(
+        master=m,
+        datetime=dt,
+        defaults={'customer': c, 'name': name, 'phone': phone},
+    )
+
+    if created:
+        CM = CalendarManager()
+        if CM.write_event(m.master_id, dt, (name + phone)):
+            return JsonResponse({'status':'success' , 
+                                'info' : {'master' : m.master_id, 
+                                        'line_id' : line_id, 
+                                        'datetime' : dt_str, 
+                                        'name' : name,
+                                        'phone' : phone,
+                                        'reservation_id' : obj.id}
+                                })
+    return JsonResponse({'status':'fail', 'info' : {}})
+    # result = {'status' : 'success or fail', 
+    #         'info' : {'master' : 'master_id_name', 
+    #                 'line_id' : 'line_id', 
+    #                 'datetime' : 'datetime_str', 
+    #                 'name' : 'reservation_name',
+    #                 'phone' : 'phone_number',
+    #                 'reservation_id' : 'reservation_id_number'}
+    #         }
+
+def get_reservation(request):
+    if request.method =="GET" :
+        status = "GET"
+
+    line_id = request.GET.get('line_id', 'default_id')
+    c = Customer.objects.get(line_id = line_id)
+    r = Reservation.objects.filter(customer = c)
+
+    tztaipei = timezone(timedelta(seconds=28800))
+    infos = []
+    for item in r:
+        infos.append({'master' : item.master.name,
+                    'line_id' : item.customer.line_id, 
+                    'datetime' : item.datetime.astimezone(tztaipei).strftime('%Y%m%d%H%M'), 
+                    'name' : item.name,
+                    'phone' : item.phone,
+                    'reservation_id' : item.id})
+
+
+    result = {'status' : len(infos), #'reservation_numbers', 
+            'infos' : infos}
+    return JsonResponse(result)
+
+def delete_reservation(request):
+    result = {'status' : 'success or fail', 
+            'info' : {'master' : 'master_id_name', 
+                    'line_id' : 'line_id', 
+                    'datetime' : 'datetime_str', 
+                    'name' : 'reservation_name',
+                    'phone' : 'phone_number',
+                    'reservation_id' : 'reservation_id_number'}
+            }
+    return JsonResponse(result)
+
+def get_freetime(request):
+    if request.method =="GET" :
+        status = "GET"    
+
+    d_interval = timedelta(days=2)
+    d_delay = timedelta(days=0)
+    d_worktime = timedelta(hours=1)
+    tztaipei = timezone(timedelta(seconds=28800))
+
+    #d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
+    d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
+    d_endtime = d_starttime + d_interval
+    even_worktime_set = set()
+    odd_worktime_set = set()
+    while d_starttime < d_endtime:
+        for i in range(10):
+            if i % 2:
+                tmp = d_starttime + d_worktime*i
+                odd_worktime_set.add(tmp)                
+            else:
+                tmp = d_starttime + d_worktime*i
+                if tmp.hour != 12:
+                    even_worktime_set.add(tmp)
+        d_starttime += timedelta(days=1)
+
+    #d_starttime = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0) + d_delay
+    d_starttime = datetime(2019, 9, 1, 8, 0) + d_delay
+    d_endtime = d_starttime + d_interval
+
+    g_id = request.GET.get('gid', 'A')
+    g = MasterGroup.objects.get(name=g_id)
+    m_list = Master.objects.filter(group=g)
+    m_id = [ m.master_id for m in m_list ]
+    m_name = [m.name for m in m_list]
+    m_id_name = dict(zip(m_id,m_name))
+
+    #m_id = ['A001']
+    CM = CalendarManager()
+    busy_result = CM.get_busy(d_starttime, d_endtime, *m_id)
+    #print(busy_result['A001'])
+
+    free_result = {}
+    for m in m_list:
+        if m.work_type == 1:
+            free_result[m.master_id] = odd_worktime_set - busy_result[m.master_id]
+        else:
+            free_result[m.master_id] = even_worktime_set - busy_result[m.master_id]
+
+    all_worktime_set  = odd_worktime_set | even_worktime_set
+    info_result = []
+    for t in all_worktime_set:
+        for key, value in free_result.items():
+            if t in value:
+                info_result.append({ 'master_id' : key, 'master_name' : m_id_name[key], 'datetime' : t.strftime('%Y%m%d%H%M')})
+
+    info_result = sorted(info_result, key = lambda x : x['datetime'])
+
+    result = {'status' : 'success',
+            "infos" : info_result}
+    # result = {'status' : 'success or fail', 
+    #         'infos' : [{'master' : 'master_id_name',  
+    #                 'datetime' : 'datetime_str'} 
+    #                 ,{}]
+    #         }
+    return JsonResponse(result)
+
+#post {status : "" , info : {reservation info}}
+#get {status : "reservation number ", "infos" : [{id:'id', name:'nmae', ph, reservation id},{},{}]
+#delet {status : "bool" }
+#freetime get : {status : '', infos : [{'mid':'mid, 'date': dt },{'mid':'mid', 'date' : dt.str}, order by date]

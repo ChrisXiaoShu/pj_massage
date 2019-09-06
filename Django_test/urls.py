@@ -16,11 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from test_app.views import sayhello
-from test_app.views import get_image_test
+from test_app.views import post_reservation, get_reservation, delete_reservation, get_freetime
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^$', sayhello),
-    url(r'get_image/(?P<ID>c[0-9]{2})$', get_image_test, name='get_image'),
+    #url(r'^reservation_sample/post/(?P<m_id>[0-9]+)/(?P<c_id>[0-9]+)/(?P<d>[0-9]{10})/(?P<name>c[\w]+)/(?P<phone>[\w]+)$', make_r_s),
+    #url(r'^reservation_sample/get/(?P<lineid>[0-9]+)$', get_r_s),
+    #url(r'^reservation/post/(?P<mid>[0-9]+)/(?P<dt>[0-9]+)$', post_reservation, name='post_reservation'), #lineid name phone #{status : 'success or fail', order name phone date}
+    url(r'^reservation/post/$', post_reservation, name='post_reservation'), #line_id name phone #{status : 'success or fail', order name phone date}
+    url(r'^reservation/get/$', get_reservation, name='get_reservation'), #?line_id=line_id
+    url(r'^reservation/delete/(?P<rid>[0-9]+)$', delete_reservation ,name='delete_reservation'),
+    url(r'^freetime/get/$', get_freetime ,name='get_freetime') #?gid=gid
 ]
