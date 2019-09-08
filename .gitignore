@@ -5,6 +5,7 @@
 *.code-workspace
 db.sqlite3
 dbback.sqlite3.backup0903
+*.pkl
 # 但是要追蹤 lib.pyc，即使上方已指定忽略所有的 .pyc 檔案
 #!lib.pyc
 # 只忽略根目錄下的 TODO 檔案。 不包含子目錄下的 TODO
