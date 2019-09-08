@@ -7,26 +7,23 @@
 
 # API schema
   1. API說明-取得師傅可預約時間
-  
-    - 規格定義
-    
-      - (1)	http://<server_ip>/freetime/get/
-      - (2) GET
-      
-    - Input
-
-| data_class | data_type | data_sub_type |      資料      |
-| ---------- | --------- | ------------- | -------------- |
-| obs        | gis       |               | 九宮格         |
-|||||
-| obs        | geojson   | monitor       | 監控表格       |
-| obs        | geojson   | lightning     | 閃電           |
-|||||
-| obs        | geojson   | ty_track      | 颱風路徑       |
-|||||
-| obs        | geojson   | max_rain      | 縣市最大雨量   |
-| obs        | geojson   | max_rain      | 鄉鎮最大雨量   |
-|||||
-| geomap     | geojson   |               | 養工處轄區圖   |
-| geomap     | geojson   |               | 氣象局台灣區域 |
-    -Output
+     - 規格定義
+       - (1)	http://<server_ip>/freetime/get/
+       - (2) GET    
+     - Input
+        | 項次 |  資料名稱  |  類型  |         屬性        | 備註 |
+        | ---- | --------- | ------ | ------------------- | ---- |
+        | 1    | group_name | string | 使用者選擇的師傅群組 | 預設為A group |
+     - Output
+        | 項次 |  資料名稱  |  類型  |         屬性        | 備註 |
+        | ---- | --------- | ------ | ------------------- | ---- |
+        | 1    | status | string | 狀態 | success or fail | 
+        | 2    | infos | list | 所有師傅有空時間字典 | |
+     - Json格式
+        ```json
+        result = {'status' : 'success or fail', 
+          'infos' : [{'master' : 'master_id_name',  
+                  'datetime' : 'datetime_str'} 
+                  ,{}]
+          }
+        ```
