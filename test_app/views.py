@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseNotFound, JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime, timedelta, timezone
 import pytz
 from test_app.models import Customer, Reservation, Master, MasterGroup
 from test_app.google_calendar import CalendarManager
@@ -19,9 +18,9 @@ def post_reservation(request):
     
     master_id = request.POST.get('master_id', 'default_mid')
     dt_str = request.POST.get('dt', 'default_time')
-    line_id = request.POST.get('lineid', 'default_lineid')
+    line_id = request.POST.get('line_id', 'default_lineid')
     name = request.POST.get('name', 'default_name')
-    phone = request.POST.get('phone', 'default_phonw')
+    phone = request.POST.get('phone', 'default_phone')
 
     m = Master.objects.get(master_id=master_id)
     c = Customer.objects.get(line_id=line_id)
@@ -36,14 +35,21 @@ def post_reservation(request):
 
     if created:
         CM = CalendarManager()
-        if CM.write_event(m.master_id, dt, (name + phone)):
+        event = CM.write_event(m.master_id, dt, (name + phone))
+        if event:
+            obj, created = Reservation.objects.update_or_create(
+                master=m,
+                datetime=dt,
+                defaults={'event_id': event['id']},
+            )                 
             return JsonResponse({'status':'success' , 
                                 'info' : {'master' : m.master_id, 
                                         'line_id' : line_id, 
                                         'datetime' : dt_str, 
                                         'name' : name,
                                         'phone' : phone,
-                                        'reservation_id' : obj.id}
+                                        'reservation_id' : obj.id,
+                                        'event_id' : event['id']}
                                 })
     return JsonResponse({'status':'fail', 'info' : {}})
     # result = {'status' : 'success or fail', 
@@ -79,15 +85,38 @@ def get_reservation(request):
     return JsonResponse(result)
 
 def delete_reservation(request):
-    result = {'status' : 'success or fail', 
-            'info' : {'master' : 'master_id_name', 
-                    'line_id' : 'line_id', 
-                    'datetime' : 'datetime_str', 
-                    'name' : 'reservation_name',
-                    'phone' : 'phone_number',
-                    'reservation_id' : 'reservation_id_number'}
-            }
-    return JsonResponse(result)
+    if request.method =="GET" :
+        status = "GET"  
+
+    r_id = request.GET.get('reservation_id', 'default_id')
+    r = Reservation.objects.get(id=r_id)
+    status = 'fail'
+    except_type = ''
+
+    try :
+        CM = CalendarManager()
+        delete_result = CM.delete_event(r.master.master_id, r.event_id)
+    except Exception as e:
+        except_type = str(type(e))
+    else:
+        try:
+            Reservation.objects.filter(id=r_id).delete()
+        except Exception as e:
+            except_type = str(type(e))
+        else:
+            status = 'success'
+    finally:
+        result = {'status' : status,
+                'info' : {'master' : r.master.master_id, 
+                        'line_id' : r.customer.line_id, 
+                        'datetime' : r.datetime, 
+                        'name' : r.name,
+                        'phone' : r.phone,
+                        'reservation_id' : r.id,
+                        'exception' : except_type
+                    }
+                }
+        return JsonResponse(result)
 
 def get_freetime(request):
     if request.method =="GET" :
@@ -98,8 +127,8 @@ def get_freetime(request):
     d_worktime = timedelta(hours=1)
     tztaipei = timezone(timedelta(seconds=28800))
 
-    #d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
-    d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
+    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
+    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
     even_worktime_set = set()
     odd_worktime_set = set()
@@ -114,21 +143,19 @@ def get_freetime(request):
                     even_worktime_set.add(tmp)
         d_starttime += timedelta(days=1)
 
-    #d_starttime = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0) + d_delay
-    d_starttime = datetime(2019, 9, 1, 8, 0) + d_delay
+    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
+    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
 
-    g_id = request.GET.get('gid', 'A')
-    g = MasterGroup.objects.get(name=g_id)
+    group_name = request.GET.get('group_name', 'A')
+    g = MasterGroup.objects.get(name=group_name)
     m_list = Master.objects.filter(group=g)
     m_id = [ m.master_id for m in m_list ]
     m_name = [m.name for m in m_list]
     m_id_name = dict(zip(m_id,m_name))
 
-    #m_id = ['A001']
     CM = CalendarManager()
     busy_result = CM.get_busy(d_starttime, d_endtime, *m_id)
-    #print(busy_result['A001'])
 
     free_result = {}
     for m in m_list:

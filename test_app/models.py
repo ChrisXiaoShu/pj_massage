@@ -38,6 +38,7 @@ class Reservation(models.Model):
     name = models.CharField(max_length=10)
     phone = models.CharField(max_length=10)
     has_remind = models.BooleanField(default=False)
+    event_id = models.CharField(max_length=50, default='')
 
     def __str__(self):
         return "{}_{}_{}_{}".format(self.id, self.master, datetime.strftime(self.datetime, '%Y%m%d%H%M'), self.name)
