@@ -45,8 +45,8 @@ class CalendarManager():
             items.append({"id": self.all_massager_calendar[m_id]})
 
         tz = pytz.timezone(self.timezone)
-        start_time = tz.localize(start_time)
-        end_time = tz.localize(end_time)
+        #start_time = tz.localize(start_time)
+        #end_time = tz.localize(end_time)
         body = {
             "timeMin": start_time.isoformat(),
             "timeMax": end_time.isoformat(),
@@ -61,14 +61,24 @@ class CalendarManager():
         tmp = {}
         for m_id in m_id_list:
             tmp[m_id] = cal_dict[self.all_massager_calendar[m_id]]['busy']
-        print(tmp)
+        #print(tmp)
+        #print('-------------------------')
         result = {}
         for key, value in tmp.items():
             tmp = set()
-            for value2 in value:
-                tmp.add(str_to_datetime(value2['start']))
+            for item in value:
+                start_time = str_to_datetime(item['start'])
+                end_time = str_to_datetime(item['end'])
+                time_interval = timedelta(hours=1)
+                while start_time < end_time:                    
+                    tmp.add(start_time)
+                    start_time += time_interval                    
             result[key] = tmp
-        
+        #print(result)
+        #test = tz.localize(datetime(2019, 9, 1, 8, 0))
+        #test = datetime(2019, 9, 1, 8, 0)
+        #print(test)
+        #print(test in result['A001'])
         return result
         #result = {'master_id':{datetime set}}
 
@@ -94,41 +104,7 @@ class CalendarManager():
         #print(event)
         return bool(event)
 
-    # def get_free_time(self, start_time, end_time, group_id):
-    #     g = MassagerGroup.objects.get(id = group_id)
-    #     m_q = Massager.objects.filter(massagergroup = g)
-    #     m_id_list = [m.m_name for m in m_q]
-    #     starttime1 = datetime(2019, 9, 1, 9, 0)
-    #     endtime2 = datetime(2019, 9, 7, 23, 59)
-    #     #print(self.get_busy(starttime1, endtime2, *m_id_list))
-    #     busy = self.get_busy(starttime1, endtime2, *m_id_list)
-        
-    #     return self.get_busy(starttime1, endtime2, *m_id_list)
-
-    
-
-# c = Customer.objects.get(id='2')
-# print(c)
-
-#CM = CalendarManager()
-#CM.get_free_time(1, 2, 1)
-# #result = CM.get_busy('m_A_12')
-#starttime = datetime.fromisoformat('2019-09-03T08:00:00+08:06')
-#starttime = datetime(2019, 9, 1, 7, 0)
-#endtime = datetime.fromisoformat('2019-09-07T20:25:00+08:06')
-#endtime = datetime(2019, 9, 7, 23, 59)#
-#result = CM.get_busy(starttime, endtime, 'A001')
-# result = CM.write_event('m_A_2', starttime, 'christest')
-#print(result)
-#result = CM.get_busy(starttime, endtime, 'm_A_12')
-#print(result)
-#for i in result['items']:
-#    print(i['summary'], i['start'])
-#print('end')
-#get all massager calendar
-# for i in all_massage_calendar:
-#     result = service.events().list(calendarId=i['id'], timeZone="Asia/Taipei").execute()
-#     print('----------------',i['summary'],'---------------------')
-#     for event in result['items']:
-#         print(event['summary'], event['start']['dateTime'])
-#         #print(event)
+# CM = CalendarManager()
+# starttime = datetime(2019, 9, 1, 7, 0)
+# endtime = datetime(2019, 9, 7, 23, 59)#
+# result = CM.get_busy(starttime, endtime, 'A001')

@@ -98,8 +98,8 @@ def get_freetime(request):
     d_worktime = timedelta(hours=1)
     tztaipei = timezone(timedelta(seconds=28800))
 
-    #d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
-    d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
+    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
+    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
     even_worktime_set = set()
     odd_worktime_set = set()
@@ -114,8 +114,8 @@ def get_freetime(request):
                     even_worktime_set.add(tmp)
         d_starttime += timedelta(days=1)
 
-    #d_starttime = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0) + d_delay
-    d_starttime = datetime(2019, 9, 1, 8, 0) + d_delay
+    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=9, minute=0, second=0, microsecond=0) + d_delay
+    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
 
     g_id = request.GET.get('gid', 'A')
