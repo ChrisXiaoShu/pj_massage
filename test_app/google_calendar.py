@@ -92,11 +92,19 @@ class CalendarManager():
 
         event = self.GC.service.events().insert(calendarId=calendar_id, body=event).execute()
 
-        return bool(event)
+        return event
+    
 
+    def delete_event(self, m_id, event_id):
+        calendar_id = self.all_massager_calendar[m_id]
+        result = self.GC.service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+        return result
+        
 
 #for test
-# CM = CalendarManager()
+#CM = CalendarManager()
 # starttime = datetime(2019, 9, 1, 7, 0)
 # endtime = datetime(2019, 9, 7, 23, 59)#
 # result = CM.get_busy(starttime, endtime, 'A001')
+#result = CM.delete_event('A001', 'b8qogs6mbj4cqn8fuec9vcb50s')
+#print(result)

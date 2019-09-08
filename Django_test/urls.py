@@ -25,6 +25,6 @@ urlpatterns = [
     #url(r'^reservation/post/(?P<mid>[0-9]+)/(?P<dt>[0-9]+)$', post_reservation, name='post_reservation'), #lineid name phone #{status : 'success or fail', order name phone date}
     url(r'^reservation/post/$', post_reservation, name='post_reservation'), #line_id name phone #{status : 'success or fail', order name phone date}
     url(r'^reservation/get/$', get_reservation, name='get_reservation'), #?line_id=line_id
-    url(r'^reservation/delete/(?P<rid>[0-9]+)$', delete_reservation ,name='delete_reservation'),
+    url(r'^reservation/delete/$', delete_reservation ,name='delete_reservation'),
     url(r'^freetime/get/$', get_freetime ,name='get_freetime') #?gid=gid
 ]
