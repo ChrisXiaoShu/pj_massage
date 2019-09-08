@@ -44,9 +44,6 @@ class CalendarManager():
         for m_id in m_id_list:
             items.append({"id": self.all_massager_calendar[m_id]})
 
-        tz = pytz.timezone(self.timezone)
-        #start_time = tz.localize(start_time)
-        #end_time = tz.localize(end_time)
         body = {
             "timeMin": start_time.isoformat(),
             "timeMax": end_time.isoformat(),
@@ -57,12 +54,10 @@ class CalendarManager():
         eventsResult = self.GC.service.freebusy().query(body=body).execute()
         cal_dict = eventsResult[u'calendars']
 
-        #print(cal_dict)
         tmp = {}
         for m_id in m_id_list:
             tmp[m_id] = cal_dict[self.all_massager_calendar[m_id]]['busy']
-        #print(tmp)
-        #print('-------------------------')
+
         result = {}
         for key, value in tmp.items():
             tmp = set()
@@ -74,13 +69,8 @@ class CalendarManager():
                     tmp.add(start_time)
                     start_time += time_interval                    
             result[key] = tmp
-        #print(result)
-        #test = tz.localize(datetime(2019, 9, 1, 8, 0))
-        #test = datetime(2019, 9, 1, 8, 0)
-        #print(test)
-        #print(test in result['A001'])
+
         return result
-        #result = {'master_id':{datetime set}}
 
 
     def write_event(self, m_id, start_time, summary):
@@ -101,9 +91,11 @@ class CalendarManager():
         }
 
         event = self.GC.service.events().insert(calendarId=calendar_id, body=event).execute()
-        #print(event)
+
         return bool(event)
 
+
+#for test
 # CM = CalendarManager()
 # starttime = datetime(2019, 9, 1, 7, 0)
 # endtime = datetime(2019, 9, 7, 23, 59)#
