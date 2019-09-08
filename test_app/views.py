@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseNotFound, JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime, timedelta, timezone
 import pytz
 from test_app.models import Customer, Reservation, Master, MasterGroup
 from test_app.google_calendar import CalendarManager
