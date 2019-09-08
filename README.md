@@ -11,6 +11,7 @@
       (1)	http://<server_ip>/freetime/get/
       (2) GET
     - Input
+
 | data_class | data_type | data_sub_type |      資料      |
 | ---------- | --------- | ------------- | -------------- |
 | obs        | gis       |               | 九宮格         |
