@@ -8,8 +8,8 @@
 # API schema
   1. API說明-取得師傅可預約時間
     - 規格定義
-      (1)	http://<server_ip>/freetime/get/
-      (2) GET
+      - (1)	http://<server_ip>/freetime/get/
+      - (2) GET
     - Input
 
 | data_class | data_type | data_sub_type |      資料      |
