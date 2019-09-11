@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url
-from test_app.views import post_reservation, get_reservation, delete_reservation, get_freetime, get_customer, post_customer
+from test_app.views import post_reservation, get_reservation, delete_reservation, get_freetime, get_customer, post_customer, get_group
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^reservation/get/$', get_reservation, name='get_reservation'), #?line_id=line_id
     url(r'^reservation/delete/$', delete_reservation, name='delete_reservation'),
     url(r'^freetime/get/$', get_freetime, name='get_freetime'), #?gid=gid
-    url((r'^customer/get/$', get_customer, name='get_customer') #?line_id=line_id
-    url((r'^customer/post/$', post_customer, name='post_customer') #?line_id=line_id
+    url((r'^customer/get/$', get_customer, name='get_customer'), #?line_id=line_id
+    url((r'^customer/post/$', post_customer, name='post_customer'), #?line_id=line_id
+    url((r'^group/get/$', get_group, name='get_group')        
 ]
