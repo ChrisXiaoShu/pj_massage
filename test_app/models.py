@@ -13,6 +13,8 @@ class Customer(models.Model):
 
 class MasterGroup(models.Model):
     name = models.CharField(max_length=10)
+    descript = models.CharField(max_length=30, default='')
+    image = models.CharField(max_length=50, default='')
 
     def __str__(self):
         return "{}{}".format('group ', self.name)
