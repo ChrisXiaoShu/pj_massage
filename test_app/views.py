@@ -235,3 +235,18 @@ def post_customer(request):
                         'is_black' : obj.is_black}
              }
     return JsonResponse(result)
+
+def get_group(request):
+    if request.method =="GET" :
+        status = "GET"
+    g_queryset = MasterGroup.objects.all()
+    infos = []
+    for g in g_queryset:
+        tmp = { ‘group’ : g.name,
+                ‘descript’ : g.descript,
+                ‘image : g.image}
+        infos.append(tmp)
+     
+    result = {'status' : 'success',
+              'infos' : infos}
+    return JsonResponse(result)
