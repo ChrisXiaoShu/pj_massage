@@ -2,7 +2,7 @@ from django.db import models
 from datetime import datetime
 
 class Customer(models.Model):
-    line_id = models.CharField(max_length=30, primary_key=True)
+    line_id = models.CharField(max_length=128, primary_key=True)
     name = models.CharField(max_length=10)
     phone = models.CharField(max_length=10)
     is_black = models.BooleanField(default=False)
