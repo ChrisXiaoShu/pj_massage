@@ -17,7 +17,7 @@ class ReservationAdmin(admin.ModelAdmin):
 
 
 class MasterGroupAdmin(admin.ModelAdmin):
-    list_display=('id', 'name')
+    list_display=('id', 'name', 'descript', 'image')
     ordering=('name',)
 
 class MasterAdmin(admin.ModelAdmin):
