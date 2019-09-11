@@ -186,3 +186,25 @@ def get_freetime(request):
 #get {status : "reservation number ", "infos" : [{id:'id', name:'nmae', ph, reservation id},{},{}]
 #delet {status : "bool" }
 #freetime get : {status : '', infos : [{'mid':'mid, 'date': dt },{'mid':'mid', 'date' : dt.str}, order by date]
+
+def get_customer(request):
+    if request.method =="GET" :
+        status = "GET"
+
+    line_id = request.GET.get('line_id', 'default_id')
+    status = 'fail'    
+    try:
+        c = Customer.objects.get(line_id = line_id)
+    except Exception as e:
+        info = {'exception' : str(type(e))}
+    else:
+        status = 'seccess'
+        info = {'name' : c.name,
+                'phone' : c.phone,
+                'is_black' : c.is_black}
+    finally:
+        result = {‘status’ : status,
+                ‘info’ : info}
+    
+    result = result
+    return JsonResponse(result)
