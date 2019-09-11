@@ -10,7 +10,7 @@ class CustomerAdmin(admin.ModelAdmin):
 
 
 class ReservationAdmin(admin.ModelAdmin):
-    list_display=('id', 'customer', 'datetime', 'name', 'phone', 'has_remind')
+    list_display=('id', 'customer', 'master', 'datetime', 'name', 'phone', 'has_remind')
     list_filter=('datetime',)
     search_fields=('customer','name')
     ordering=('datetime',)
