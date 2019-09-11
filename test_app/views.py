@@ -199,12 +199,39 @@ def get_customer(request):
         info = {'exception' : str(type(e))}
     else:
         status = 'seccess'
-        info = {'name' : c.name,
+        info = {'line_id' : line_id,
+                'name' : c.name,
                 'phone' : c.phone,
                 'is_black' : c.is_black}
     finally:
         result = {‘status’ : status,
                 ‘info’ : info}
+        
+    return JsonResponse(result)
+
+@csrf_exempt #to disable the CSRF restrict
+def post_customer(request):
+    if request.method =="POST" :
+        status = "POST"
+        
+    line_id = request.POST.get('line_id', 'default_lineid')
+    name = request.POST.get('name', 'default_name')
+    phone = request.POST.get('phone', 'default_phone')
     
-    result = result
+    obj, created = Customer.objects.get_or_create(
+        line_id=line_id,
+        defaults={'name': name, 'phone': phone},
+    )
+    
+    if create:
+        status = 'success'
+    else:
+        status = 'fail'
+        
+    result = {'status' : status, 
+              'info' : {'line_id' : obj.line_id
+                        'name' : obj.name, 
+                        'phone' : obj.phone,
+                        'is_black' : obj.is_black}
+             }
     return JsonResponse(result)
