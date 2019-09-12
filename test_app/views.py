@@ -153,7 +153,7 @@ def get_freetime(request):
     group_name = request.GET.get('group_name', 'A')
     g = MasterGroup.objects.get(name=group_name)
     m_list = Master.objects.filter(group=g)
-    m_id = [ m.master_id for m in m_list ]
+    m_id = [m.master_id for m in m_list]
     m_name = [m.name for m in m_list]
     m_id_name = dict(zip(m_id,m_name))
 
