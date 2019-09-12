@@ -88,10 +88,10 @@ def get_reservation(request):
     return JsonResponse(result)
 
 def delete_reservation(request):
-    if request.method =="GET" :
-        status = "GET"  
+    if request.method =="DELETE" :
+        status = "DELETE"  
 
-    r_id = request.GET.get('reservation_id', 'default_id')
+    r_id = request.DELETE.get('reservation_id', 'default_id')
     r = Reservation.objects.get(id=r_id)
     status = 'fail'
     except_type = ''
@@ -101,14 +101,13 @@ def delete_reservation(request):
         delete_result = CM.delete_event(r.master.master_id, r.event_id)
     except Exception as e:
         except_type = str(type(e))
-    else:
+    finally:
         try:
             Reservation.objects.filter(id=r_id).delete()
         except Exception as e:
             except_type = str(type(e))
         else:
             status = 'success'
-    finally:
         result = {'status' : status,
                 'info' : {'master' : r.master.master_id, 
                         'line_id' : r.customer.line_id, 
