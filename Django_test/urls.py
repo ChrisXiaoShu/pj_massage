@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^reservation/get/$', get_reservation, name='get_reservation'), #?line_id=line_id
     url(r'^reservation/delete/$', delete_reservation, name='delete_reservation'),
     url(r'^freetime/get/$', get_freetime, name='get_freetime'), #?gid=gid
-    url((r'^customer/get/$', get_customer, name='get_customer'), #?line_id=line_id
-    url((r'^customer/post/$', post_customer, name='post_customer'), #?line_id=line_id
-    url((r'^group/get/$', get_group, name='get_group')        
+    url(r'^customer/get/$', get_customer, name='get_customer'), #?line_id=line_id
+    url(r'^customer/post/$', post_customer, name='post_customer'), #?line_id=line_id
+    url(r'^group/get/$', get_group, name='get_group')        
 ]

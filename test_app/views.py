@@ -116,7 +116,7 @@ def delete_reservation(request):
                         'exception' : except_type
                     }
                 }
-        return JsonResponse(result)
+    return JsonResponse(result)
 
 def get_freetime(request):
     if request.method =="GET" :
@@ -204,8 +204,8 @@ def get_customer(request):
                 'phone' : c.phone,
                 'is_black' : c.is_black}
     finally:
-        result = {‘status’ : status,
-                ‘info’ : info}
+        result = {'status' : status,
+                'info' : info}
         
     return JsonResponse(result)
 
@@ -223,13 +223,13 @@ def post_customer(request):
         defaults={'name': name, 'phone': phone},
     )
     
-    if create:
+    if created:
         status = 'success'
     else:
         status = 'fail'
         
     result = {'status' : status, 
-              'info' : {'line_id' : obj.line_id
+              'info' : {'line_id' : obj.line_id,
                         'name' : obj.name, 
                         'phone' : obj.phone,
                         'is_black' : obj.is_black}
@@ -242,9 +242,9 @@ def get_group(request):
     g_queryset = MasterGroup.objects.all()
     infos = []
     for g in g_queryset:
-        tmp = { ‘group’ : g.name,
-                ‘descript’ : g.descript,
-                ‘image : g.image}
+        tmp = { 'group' : g.name,
+                'descript' : g.descript,
+                'image' : g.image}
         infos.append(tmp)
      
     result = {'status' : 'success',
