@@ -23,7 +23,10 @@ def post_reservation(request):
     phone = request.POST.get('phone', 'default_phone')
 
     m = Master.objects.get(master_id=master_id)
-    c = Customer.objects.get(line_id=line_id)
+    c, created = Customer.objects.get_or_create(
+        line_id=line_id,
+        defaults={'name': name, 'phone': phone},
+    )
     dt = datetime.strptime(dt_str, '%Y%m%d%H%M')
 
     dt.replace(tzinfo=pytz.timezone('Asia/Taipei'))
