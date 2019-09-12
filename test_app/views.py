@@ -125,18 +125,24 @@ def get_freetime(request):
     if request.method =="GET" :
         status = "GET"    
 
-    d_interval = timedelta(days=2)
+    d_interval = timedelta(days=3)
     d_delay = timedelta(days=0)
     d_worktime = timedelta(hours=1)
     tztaipei = timezone(timedelta(seconds=28800))
-
-    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
+    timenow = datetime.now()
+    start_time = request.GET.get('start_date', datetime.now().strftime('%Y%m%d'))
+    start_time = start_time + timenow.strftime('%H')
+    start_time = datetime.strptime(start_time, '%Y%m%d%H')
+    d_starttime = start_time.astimezone(tztaipei).replace(minute=0, second=0, microsecond=0) + d_delay
+    if d_starttime.hour % 2:
+        d_starttime = d_starttime.replace(hour=d_starttime.hour+1) 
     #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
     even_worktime_set = set()
     odd_worktime_set = set()
+    index = 21 - d_starttime.hour
     while d_starttime < d_endtime:
-        for i in range(10):
+        for i in range(index):
             if i % 2:
                 tmp = d_starttime + d_worktime*i
                 odd_worktime_set.add(tmp)                
@@ -166,18 +172,37 @@ def get_freetime(request):
             free_result[m.master_id] = odd_worktime_set - busy_result[m.master_id]
         else:
             free_result[m.master_id] = even_worktime_set - busy_result[m.master_id]
-
+    #print(free_result)
     all_worktime_set  = odd_worktime_set | even_worktime_set
-    info_result = []
-    for t in all_worktime_set:
-        for key, value in free_result.items():
-            if t in value:
-                info_result.append({ 'master_id' : key, 'master_name' : m_id_name[key], 'datetime' : t.strftime('%Y%m%d%H%M')})
+    tmp = set()
+    for worktime in all_worktime_set:
+        tmp.add(worktime.strftime('%Y%m%d'))
+    date_time = []
+    for i in tmp:
+        date_time.append({'date':i, 'time_list':list()})
+    for index in range(len(date_time)):
+        date = date_time[index]['date']
+        dt_start = datetime.strptime(date+'0000', '%Y%m%d%H%M')
+        dt_start = dt_start.astimezone(tztaipei)
+        dt_end = dt_start + timedelta(days=1)
+        for master_id, freetime_list in free_result.items():
+            for freetime in freetime_list:
+                if freetime > dt_start and freetime <dt_end:
+                    date_time[index]['time_list'].append({'master_id' : master_id, 
+                                                            'master_name': m_id_name[master_id],
+                                                            'time' : freetime.strftime('%H%M')})
+    date_time = sorted(date_time, key = lambda x : x['date'])
+    for item in date_time:
+        time_list = item['time_list']
+        time_list = sorted(time_list, key = lambda x : x['time'], reverse=True)
+    # for t in all_worktime_set:
+    #     for key, value in free_result.items():
+    #         if t in value:
+    #             info_result.append({ 'master_id' : key, 'master_name' : m_id_name[key], 'datetime' : t.strftime('%Y%m%d%H%M')})
 
-    info_result = sorted(info_result, key = lambda x : x['datetime'])
-
+    # info_result = sorted(info_result, key = lambda x : x['datetime'])
     result = {'status' : 'success',
-            "infos" : info_result}
+            "infos" : {'datetime' : date_time}}
     # result = {'status' : 'success or fail', 
     #         'infos' : [{'master' : 'master_id_name',  
     #                 'datetime' : 'datetime_str'} 
