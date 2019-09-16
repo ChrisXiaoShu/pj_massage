@@ -99,6 +99,14 @@ class CalendarManager():
         calendar_id = self.all_massager_calendar[m_id]
         result = self.GC.service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
         return result
+
+    def insert_calendar(self, summary):
+        calendar = {
+            'summary': summary,
+            'timeZone': self.timezone
+        }
+        created_calendar = self.GC.service.calendars().insert(body=calendar).execute()
+        print(created_calendar['id'], '----', summary)
         
 
 #for test

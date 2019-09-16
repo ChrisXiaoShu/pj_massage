@@ -1,5 +1,8 @@
 from django.db import models
 from datetime import datetime
+from test_app.google_calendar import CalendarManager
+
+CM = CalendarManager()
 
 class Customer(models.Model):
     line_id = models.CharField(max_length=128, primary_key=True)
@@ -31,6 +34,12 @@ class Master(models.Model):
 
     def __str__(self):
         return "{}_{}".format(self.group, self.name)
+    
+    def save(self, *args, **kwargs):
+        super(Master, self).save(*args, **kwargs)
+        CM.insert_calendar(self.master_id+"_"+self.name)
+        # update_meta_data_information_and_remove_old_data(PixelDataFile, self.meta_data.id, self.modified_date)
+
 
 
 class Reservation(models.Model):
