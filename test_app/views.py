@@ -132,24 +132,32 @@ def get_freetime(request):
     start_time = request.GET.get('start_date', datetime.now().strftime('%Y%m%d'))
     start_time = start_time + timenow.strftime('%H')
     start_time = datetime.strptime(start_time, '%Y%m%d%H')
-    d_starttime = start_time.astimezone(tztaipei).replace(minute=0, second=0, microsecond=0) + d_delay
+    d_starttime = start_time.astimezone(tztaipei).replace(minute=0, second=0, microsecond=0) + d_delay + timedelta(hours=1)
     if d_starttime.hour % 2:
         d_starttime = d_starttime.replace(hour=d_starttime.hour+1) 
     #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
     d_endtime = d_starttime + d_interval
     even_worktime_set = set()
     odd_worktime_set = set()
-    index = 21 - d_starttime.hour
+    #index = 21 - d_starttime.hour
     while d_starttime < d_endtime:
-        for i in range(index):
+        if d_starttime.hour < 8:
+            d_starttime = d_starttime.replace(hour=8)
+        for i in range(13):
+            tmp = d_starttime + d_worktime*i
+            if tmp.hour > 21:
+                break  
             if i % 2:
-                tmp = d_starttime + d_worktime*i
+                #tmp = d_starttime + d_worktime*i
                 odd_worktime_set.add(tmp)                
             else:
-                tmp = d_starttime + d_worktime*i
+                #tmp = d_starttime + d_worktime*i
                 if tmp.hour != 12:
                     even_worktime_set.add(tmp)
+        d_starttime = d_starttime.replace(hour=8)
         d_starttime += timedelta(days=1)
+
+    #print(even_worktime_set)
 
     d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
     #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
@@ -191,9 +199,9 @@ def get_freetime(request):
                                                             'master_name': m_id_name[master_id],
                                                             'time' : freetime.strftime('%H%M')})
     date_time = sorted(date_time, key = lambda x : x['date'])
-    for item in date_time:
-        time_list = item['time_list']
-        time_list = sorted(time_list, key = lambda x : x['time'], reverse=True)
+    for index in range(len(date_time)):
+        time_list = date_time[index]['time_list']
+        date_time[index]['time_list'] = sorted(time_list, key = lambda x : x['time'])
     # for t in all_worktime_set:
     #     for key, value in free_result.items():
     #         if t in value:
