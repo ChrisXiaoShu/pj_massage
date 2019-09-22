@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date, time
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound, JsonResponse
@@ -55,14 +55,6 @@ def post_reservation(request):
                                         'event_id' : event['id']}
                                 })
     return JsonResponse({'status':'fail', 'info' : {}})
-    # result = {'status' : 'success or fail', 
-    #         'info' : {'master' : 'master_id_name', 
-    #                 'line_id' : 'line_id', 
-    #                 'datetime' : 'datetime_str', 
-    #                 'name' : 'reservation_name',
-    #                 'phone' : 'phone_number',
-    #                 'reservation_id' : 'reservation_id_number'}
-    #         }
 
 def get_reservation(request):
     if request.method =="GET" :
@@ -124,45 +116,37 @@ def get_freetime(request):
     if request.method =="GET" :
         status = "GET"    
 
-    d_interval = timedelta(days=3)
-    d_delay = timedelta(days=0)
-    d_worktime = timedelta(hours=1)
+    interval = 3
+    delay = timedelta(days=0)
+    now_time = datetime.now()
     tztaipei = timezone(timedelta(seconds=28800))
-    timenow = datetime.now()
-    start_time = request.GET.get('start_date', datetime.now().strftime('%Y%m%d'))
-    start_time = start_time + timenow.strftime('%H')
+
+    start_date = request.GET.get('start_date', None)
+    if start_date is None:
+        start_date = now_time.strftime('%Y%m%d')
+    start_time = start_date + now_time.strftime('%H')
     start_time = datetime.strptime(start_time, '%Y%m%d%H')
-    d_starttime = start_time.astimezone(tztaipei).replace(minute=0, second=0, microsecond=0) + d_delay + timedelta(hours=1)
-    if d_starttime.hour % 2:
-        d_starttime = d_starttime.replace(hour=d_starttime.hour+1) 
-    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
-    d_endtime = d_starttime + d_interval
+    start_time = start_time.astimezone(tztaipei).replace(minute=0, second=0, microsecond=0) + delay
+    end_time = start_time + timedelta(days=interval)
+
+    #generate the working time set
     even_worktime_set = set()
     odd_worktime_set = set()
-    #index = 21 - d_starttime.hour
-    while d_starttime < d_endtime:
-        if d_starttime.hour < 8:
-            d_starttime = d_starttime.replace(hour=8)
-        for i in range(13):
-            tmp = d_starttime + d_worktime*i
-            if tmp.hour > 21:
-                break  
-            if i % 2:
-                #tmp = d_starttime + d_worktime*i
-                odd_worktime_set.add(tmp)                
-            else:
-                #tmp = d_starttime + d_worktime*i
-                if tmp.hour != 12:
-                    even_worktime_set.add(tmp)
-        d_starttime = d_starttime.replace(hour=8)
-        d_starttime += timedelta(days=1)
+    all_time_set = set()
+    for index in range(interval):
+        d = start_time.date() + timedelta(days=1)*index
+        for hour in range(8, 22):
+            t = time(hour, 0)
+            tmp = datetime.combine(d, t, tzinfo=tztaipei)
+            all_time_set.add(tmp)
 
-    #print(even_worktime_set)
-
-    d_starttime = datetime.now().astimezone(tztaipei).replace(hour=8, minute=0, second=0, microsecond=0) + d_delay
-    #d_starttime = datetime(2019, 9, 1, 8, 0, tzinfo=tztaipei) + d_delay
-    d_endtime = d_starttime + d_interval
-
+    #trim the time that before current time
+    for date_time in [i for i in all_time_set if i > start_time]:
+        if date_time.hour%2:
+            odd_worktime_set.add(date_time)
+        elif date_time.hour != 12:
+            even_worktime_set.add(date_time)
+    
     group_name = request.GET.get('group_name', 'A')
     g = MasterGroup.objects.get(name=group_name)
     m_list = Master.objects.filter(group=g)
@@ -171,56 +155,36 @@ def get_freetime(request):
     m_id_name = dict(zip(m_id,m_name))
 
     CM = CalendarManager()
-    busy_result = CM.get_busy(d_starttime, d_endtime, *m_id)
+    busy_result = CM.get_busy(start_time, end_time, *m_id)
 
+    #all_working_time set - busy_time set = free_time_set
     free_result = {}
     for m in m_list:
         if m.work_type == 1:
             free_result[m.master_id] = odd_worktime_set - busy_result[m.master_id]
         else:
             free_result[m.master_id] = even_worktime_set - busy_result[m.master_id]
-    #print(free_result)
-    all_worktime_set  = odd_worktime_set | even_worktime_set
-    tmp = set()
-    for worktime in all_worktime_set:
-        tmp.add(worktime.strftime('%Y%m%d'))
+
+    #reconstruct the data structure
     date_time = []
-    for i in tmp:
-        date_time.append({'date':i, 'time_list':list()})
-    for index in range(len(date_time)):
-        date = date_time[index]['date']
-        dt_start = datetime.strptime(date+'0000', '%Y%m%d%H%M')
-        dt_start = dt_start.astimezone(tztaipei)
-        dt_end = dt_start + timedelta(days=1)
+    for index in range(interval):
+        d = start_time.date() + timedelta(days=1)*index
+        date_time.append({'date' : d.strftime('%Y%m%d'), 'time_list' : list()})
         for master_id, freetime_list in free_result.items():
             for freetime in freetime_list:
-                if freetime > dt_start and freetime <dt_end:
+                if freetime.date() == d:
                     date_time[index]['time_list'].append({'master_id' : master_id, 
                                                             'master_name': m_id_name[master_id],
                                                             'time' : freetime.strftime('%H%M')})
+
     date_time = sorted(date_time, key = lambda x : x['date'])
     for index in range(len(date_time)):
         time_list = date_time[index]['time_list']
         date_time[index]['time_list'] = sorted(time_list, key = lambda x : x['time'])
-    # for t in all_worktime_set:
-    #     for key, value in free_result.items():
-    #         if t in value:
-    #             info_result.append({ 'master_id' : key, 'master_name' : m_id_name[key], 'datetime' : t.strftime('%Y%m%d%H%M')})
 
-    # info_result = sorted(info_result, key = lambda x : x['datetime'])
     result = {'status' : 'success',
             "infos" : {'datetime' : date_time}}
-    # result = {'status' : 'success or fail', 
-    #         'infos' : [{'master' : 'master_id_name',  
-    #                 'datetime' : 'datetime_str'} 
-    #                 ,{}]
-    #         }
     return JsonResponse(result)
-
-#post {status : "" , info : {reservation info}}
-#get {status : "reservation number ", "infos" : [{id:'id', name:'nmae', ph, reservation id},{},{}]
-#delet {status : "bool" }
-#freetime get : {status : '', infos : [{'mid':'mid, 'date': dt },{'mid':'mid', 'date' : dt.str}, order by date]
 
 def get_customer(request):
     if request.method =="GET" :
